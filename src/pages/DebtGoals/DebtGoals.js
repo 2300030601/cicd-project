@@ -1,3 +1,5 @@
+// Developed by Teammate 1 - Dashboard and Finance Modules
+
 import React, { useState } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./DebtGoals.css";

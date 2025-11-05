@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./AddTransaction.css";
+import { TransactionContext } from "../../context/TransactionContext";
 
 const AddTransaction = () => {
+  const { setTransactions, currentUser } = useContext(TransactionContext);
+
   const [formData, setFormData] = useState({
     type: "expense",
     amount: "",
@@ -11,22 +14,51 @@ const AddTransaction = () => {
     note: "",
   });
 
+  // ✅ Handle input change safely
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "amount") {
+      if (value === "" || /^\d*\.?\d*$/.test(value)) {
+        setFormData({ ...formData, [name]: value });
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
+  // ✅ Submit form
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // ✅ Save transaction to localStorage
-    const stored = JSON.parse(localStorage.getItem("transactions")) || [];
-    const updated = [...stored, formData];
-    localStorage.setItem("transactions", JSON.stringify(updated));
+    if (!formData.amount || !formData.category || !formData.date) {
+      alert("⚠️ Please fill all required fields!");
+      return;
+    }
 
-    // ✅ Notify BudgetPlanner to reload (same tab + other tabs)
+    // ✅ Get logged user from context or localStorage
+    const loggedUsername = currentUser?.name || localStorage.getItem("loggedUser");
+    if (!loggedUsername) {
+      alert("⚠️ Please login first!");
+      return;
+    }
+
+    // ✅ Prepare new transaction
+    const transactionData = {
+      ...formData,
+      amount: parseFloat(formData.amount),
+      id: Date.now(),
+    };
+
+    // ✅ Fetch and update user-specific transactions
+    const key = `transactions_${loggedUsername}`;
+    const existing = JSON.parse(localStorage.getItem(key)) || [];
+    const updated = [...existing, transactionData];
+    localStorage.setItem(key, JSON.stringify(updated));
+
+    // ✅ Update context and refresh listeners
+    setTransactions(updated);
     window.dispatchEvent(new Event("transactionsUpdated"));
 
-    // ✅ Optional alert
     alert("✅ Transaction added successfully!");
 
     // Reset form
@@ -60,7 +92,7 @@ const AddTransaction = () => {
           <div className="form-group">
             <label>Amount (₹)</label>
             <input
-              type="number"
+              type="text"
               name="amount"
               value={formData.amount}
               onChange={handleChange}

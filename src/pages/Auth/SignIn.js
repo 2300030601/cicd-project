@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./Auth.css";
 import { useNavigate } from "react-router-dom";
-
+import { setLoggedInUser } from "../../UserDataManager";
 const SignIn = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -10,15 +10,18 @@ const SignIn = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Placeholder for backend login logic
+    // ✅ Simulate a successful login
     alert("Login successful! (demo)");
 
-    // 🧠 Save user info (you can add backend data later)
+    // 🧠 Save user info in localStorage (so all pages can access it)
     const userData = {
-      name: email.split("@")[0], // use part of email as username for now
+      id: Date.now(), // unique fake ID (for demo purpose)
+      name: email.split("@")[0], // username part
       email: email,
       joined: "March 2024",
       plan: "Premium",
+      balance: 10000, // optional: demo balance
+      transactions: [], // demo array for future use
     };
 
     localStorage.setItem("user", JSON.stringify(userData));

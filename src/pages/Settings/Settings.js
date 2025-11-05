@@ -1,3 +1,5 @@
+// Developed by Teammate 2 - UI & Navigation
+
 import React, { useContext, useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./Settings.css";

@@ -1,3 +1,5 @@
+// Developed by Teammate 1 - Dashboard and Finance Modules
+
 import React, { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./BudgetPlanner.css";
@@ -11,7 +13,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Colors for charts and category progress bars
 const PIE_COLORS = {
   Remaining: "#00C49F",
   Spent: "#FF8042",
@@ -22,11 +23,13 @@ const PIE_COLORS = {
   Misc: "#666666",
 };
 
-// Default categories
 const DEFAULT_CATEGORIES = ["Food", "Travel", "Utilities", "Entertainment"];
 
 const BudgetPlanner = () => {
-  const { theme } = useContext(SettingsContext); // ✅ Get theme (light/dark)
+  const { theme } = useContext(SettingsContext);
+
+  // ✅ Get current logged-in user (consistent with AddTransaction & ViewHistory)
+  const [username] = useState(() => localStorage.getItem("loggedUser") || "guest");
 
   const [budget, setBudget] = useState(0);
   const [spent, setSpent] = useState(0);
@@ -38,11 +41,11 @@ const BudgetPlanner = () => {
   const [categoryBudgets, setCategoryBudgets] = useState({});
   const [categorySpending, setCategorySpending] = useState({});
 
-  // ✅ Load and calculate transactions
+  // ✅ Load user-specific transactions
   useEffect(() => {
     const loadTransactions = () => {
       const transactions =
-        JSON.parse(localStorage.getItem("transactions")) || [];
+        JSON.parse(localStorage.getItem(`transactions_${username}`)) || [];
       let totalSpent = 0;
       const spendingMap = {};
 
@@ -61,61 +64,67 @@ const BudgetPlanner = () => {
 
     loadTransactions();
 
+    // ✅ Auto-refresh when new transactions are added
     const handleUpdate = (e) => {
-      if (e.key === "transactions" || e.type === "transactionsUpdated") {
+      if (
+        e.key === `transactions_${username}` ||
+        e.type === "transactionsUpdated"
+      ) {
         loadTransactions();
       }
     };
 
     window.addEventListener("storage", handleUpdate);
     window.addEventListener("transactionsUpdated", handleUpdate);
-
     return () => {
       window.removeEventListener("storage", handleUpdate);
       window.removeEventListener("transactionsUpdated", handleUpdate);
     };
-  }, []);
+  }, [username]);
 
-  // Load saved budgets
+  // ✅ Load user’s saved budgets
   useEffect(() => {
-    const savedBudget = localStorage.getItem("budget");
+    const savedBudget = localStorage.getItem(`budget_${username}`);
     if (savedBudget) setBudget(Number(savedBudget));
 
     const savedCategoryBudgets = JSON.parse(
-      localStorage.getItem("categoryBudgets")
+      localStorage.getItem(`categoryBudgets_${username}`)
     );
     if (savedCategoryBudgets) setCategoryBudgets(savedCategoryBudgets);
-  }, []);
+  }, [username]);
 
-  // Add or update total budget
+  // ✅ Update total budget
   const handleAddBudget = (e) => {
     e.preventDefault();
     const value = Number(newBudget);
     if (value > 0) {
-      localStorage.setItem("budget", value);
+      localStorage.setItem(`budget_${username}`, value);
       setBudget(value);
       alert("✅ Total budget updated!");
       setNewBudget("");
     }
   };
 
-  // Add or update category budget
+  // ✅ Update category-specific budget
   const handleAddCategoryBudget = (e) => {
     e.preventDefault();
     const { category, amount } = newCategoryBudget;
     const value = Number(amount);
     if (category && value > 0) {
       const updatedBudgets = { ...categoryBudgets, [category]: value };
-      localStorage.setItem("categoryBudgets", JSON.stringify(updatedBudgets));
+      localStorage.setItem(
+        `categoryBudgets_${username}`,
+        JSON.stringify(updatedBudgets)
+      );
       setCategoryBudgets(updatedBudgets);
       alert(`✅ ${category} budget updated!`);
       setNewCategoryBudget({ ...newCategoryBudget, amount: "" });
     }
   };
 
+  // ✅ Calculate totals
   const remaining = Math.max(budget - spent, 0);
 
-  // Chart data
   const overallData = [
     { name: "Remaining", value: remaining, color: PIE_COLORS.Remaining },
     { name: "Spent", value: spent, color: PIE_COLORS.Spent },
@@ -134,7 +143,7 @@ const BudgetPlanner = () => {
     }))
     .filter((data) => data.spent > 0 || data.budget > 0);
 
-  // Category card component
+  // ✅ UI Component for category card
   const CategoryCard = ({ category, budget, spent, remaining }) => {
     const isOver = remaining < 0;
     const percentage = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
@@ -166,7 +175,7 @@ const BudgetPlanner = () => {
     );
   };
 
-  // ✅ Apply theme dynamically
+  // ✅ Theme styling
   const themeStyles =
     theme === "light"
       ? { backgroundColor: "#f5f5f5", color: "#111" }
@@ -179,8 +188,10 @@ const BudgetPlanner = () => {
         <div className="sticky-header">
           <h1 className="blue-title">💰 Budget Planner</h1>
           <p>Set your budget, track your spending, and visualize progress!</p>
+          <p className="user-label">👤 User: {username}</p>
         </div>
 
+        {/* --- Budget Overview --- */}
         <div className="budget-summary">
           <div className="budget-card">
             <h3>Total Budget</h3>
@@ -196,6 +207,7 @@ const BudgetPlanner = () => {
           </div>
         </div>
 
+        {/* --- Charts --- */}
         <div className="budget-charts-and-categories">
           <div className="budget-chart chart-half-size">
             <h2 className="blue-title">Overall Spending</h2>
@@ -252,6 +264,7 @@ const BudgetPlanner = () => {
           )}
         </div>
 
+        {/* --- Category Budgets --- */}
         <div className="category-budgets-section">
           <h2 className="blue-title">🎯 Category Budgets</h2>
           <div className="budget-summary category-summary">
@@ -273,6 +286,7 @@ const BudgetPlanner = () => {
           </div>
         </div>
 
+        {/* --- Add/Update Budgets --- */}
         <div className="add-budget-section">
           <h2 className="blue-title">Set or Update Total Budget</h2>
           <form onSubmit={handleAddBudget} className="budget-form">

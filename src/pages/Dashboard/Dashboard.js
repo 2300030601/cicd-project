@@ -1,3 +1,4 @@
+// -----------------------
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import {
@@ -14,57 +15,80 @@ import "./Dashboard.css";
 
 const Dashboard = () => {
   const [transactions, setTransactions] = useState([]);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
+  // ✅ Load user & their transactions
+  const loadUserAndTransactions = () => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+      navigate("/signin");
+      return;
+    }
+
+    const parsedUser = JSON.parse(storedUser);
+    setUser(parsedUser);
+
+    const storedTxns = localStorage.getItem(`transactions_${parsedUser.email}`);
+    setTransactions(storedTxns ? JSON.parse(storedTxns) : []);
+  };
+
+  // Load on mount
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("transactions")) || [];
-    setTransactions(stored);
+    loadUserAndTransactions();
+  }, []);
+
+  // Refresh on global updates
+  useEffect(() => {
+    const handleUpdate = () => loadUserAndTransactions();
+    window.addEventListener("transactionsUpdated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("transactionsUpdated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
   }, []);
 
   // ---- Financial Summary ----
   const totalIncome = transactions
-    .filter((txn) => txn.type === "income")
-    .reduce((sum, txn) => sum + Number(txn.amount), 0);
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const totalExpenses = transactions
-    .filter((txn) => txn.type === "expense")
-    .reduce((sum, txn) => sum + Number(txn.amount), 0);
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const balance = totalIncome - totalExpenses;
   const netSavingsRate =
     totalIncome > 0 ? ((balance / totalIncome) * 100).toFixed(1) : 0;
 
-  // ---- Monthly Chart Data ----
+  // ---- Monthly Chart ----
   const monthlyData = {};
-  transactions.forEach((txn) => {
-    const month = new Date(txn.date).toLocaleString("default", { month: "short" });
+  transactions.forEach((t) => {
+    const month = new Date(t.date).toLocaleString("default", { month: "short" });
     monthlyData[month] =
-      (monthlyData[month] || 0) + (txn.type === "expense" ? txn.amount : 0);
+      (monthlyData[month] || 0) + (t.type === "expense" ? t.amount : 0);
   });
-
   const chartData = Object.keys(monthlyData).map((month) => ({
     month,
     expenses: monthlyData[month],
   }));
 
-  // ---- Recent Transactions ----
   const recentTxns = [...transactions]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
 
-  // ✅ Navigate to /view-history
-  const handleViewHistory = () => {
-    navigate("/view-history");
-  };
+  const handleViewHistory = () => navigate("/view-history");
 
   return (
     <div className="dashboard-container">
       <Sidebar />
-
       <div className="dashboard-content">
-        <h1 className="dashboard-title">Financial Dashboard</h1>
+        <h1 className="dashboard-title">
+          Welcome, {user ? user.name : "User"} 👋
+        </h1>
         <p className="dashboard-subtitle">
-          A quick summary of your financial health for the current period.
+          Here’s your personal financial overview.
         </p>
 
         {/* ---- Summary Cards ---- */}
@@ -96,7 +120,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ---- Charts + Transactions ---- */}
+        {/* ---- Chart & Recent ---- */}
         <div className="chart-section">
           <div className="chart-card">
             <h3>Spending Breakdown</h3>
@@ -130,11 +154,12 @@ const Dashboard = () => {
               <p>No transactions found.</p>
             ) : (
               <ul className="transaction-list">
-                {recentTxns.map((txn, index) => (
-                  <li key={index}>
+                {recentTxns.map((txn, i) => (
+                  <li key={i}>
                     {txn.category || txn.note || "Transaction"}{" "}
                     <span className={txn.type === "income" ? "positive" : "negative"}>
-                      {txn.type === "income" ? "+" : "-"}₹{txn.amount.toLocaleString()}
+                      {txn.type === "income" ? "+" : "-"}₹
+                      {txn.amount.toLocaleString()}
                     </span>
                   </li>
                 ))}

@@ -1,3 +1,5 @@
+// Developed by Teammate 2 - UI & Navigation
+
 import React from "react";
 import "./WelcomePage.css";
 import { useNavigate } from "react-router-dom";

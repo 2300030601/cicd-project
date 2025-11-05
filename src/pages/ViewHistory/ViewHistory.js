@@ -1,24 +1,58 @@
-import React, { useEffect, useState } from "react";
+// Developed by Teammate 2 - UI & Navigation
+
+import React, { useEffect, useState, useContext } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./ViewHistory.css";
+import { TransactionContext } from "../../context/TransactionContext";
 
 const ViewHistory = () => {
+  const { currentUser } = useContext(TransactionContext);
   const [transactions, setTransactions] = useState([]);
   const [filterType, setFilterType] = useState("all");
   const [sortOption, setSortOption] = useState("newest");
 
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("transactions")) || [];
-    setTransactions(stored);
-  }, []);
+  // ✅ Load transactions for the logged-in user
+  const loadTransactions = () => {
+    const username = currentUser?.name || localStorage.getItem("loggedUser");
+    if (!username) return;
 
+    const stored =
+      JSON.parse(localStorage.getItem(`transactions_${username}`)) || [];
+    setTransactions(stored);
+  };
+
+  useEffect(() => {
+    loadTransactions();
+
+    // ✅ Auto-refresh when transactions are updated anywhere
+    const handleUpdate = () => loadTransactions();
+    window.addEventListener("transactionsUpdated", handleUpdate);
+    window.addEventListener("dashboardUpdated", handleUpdate);
+
+    return () => {
+      window.removeEventListener("transactionsUpdated", handleUpdate);
+      window.removeEventListener("dashboardUpdated", handleUpdate);
+    };
+  }, [currentUser]);
+
+  // ✅ Clear all user-specific history + refresh dashboard
   const clearHistory = () => {
+    const username = currentUser?.name || localStorage.getItem("loggedUser");
+    if (!username) return;
+
     if (window.confirm("Are you sure you want to clear all transactions?")) {
-      localStorage.removeItem("transactions");
+      localStorage.removeItem(`transactions_${username}`);
       setTransactions([]);
+
+      // ✅ Notify dashboard & other pages to refresh
+      window.dispatchEvent(new Event("transactionsUpdated"));
+      window.dispatchEvent(new Event("dashboardUpdated"));
+
+      alert("✅ All transactions cleared successfully!");
     }
   };
 
+  // ✅ Filter and sort logic
   const filteredTransactions = transactions.filter((txn) => {
     if (filterType === "all") return true;
     return txn.type === filterType;
@@ -69,6 +103,7 @@ const ViewHistory = () => {
           </div>
         </div>
 
+        {/* --- Transaction Table --- */}
         {sortedTransactions.length === 0 ? (
           <p className="no-transactions">No transactions found.</p>
         ) : (
