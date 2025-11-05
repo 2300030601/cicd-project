@@ -3,21 +3,37 @@ import React, { createContext, useState, useEffect } from "react";
 export const SettingsContext = createContext();
 
 export const SettingsProvider = ({ children }) => {
-  // Load settings from localStorage
+  // 🧠 Get the current logged-in user
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const username = currentUser?.name || "Guest";
+
+  // 🏗 Load user-specific settings
   const getInitialSettings = () => {
-    const saved = localStorage.getItem("appSettings");
+    const saved = localStorage.getItem(`settings_${username}`);
     return saved
       ? JSON.parse(saved)
-      : { username: "", theme: "dark", currency: "₹", notificationEnabled: true };
+      : {
+          username: username,
+          theme: "dark",
+          currency: "₹",
+          notificationEnabled: true,
+        };
   };
 
   const [settings, setSettings] = useState(getInitialSettings());
 
-  // Whenever settings change, update localStorage and theme
+  // 💾 Save settings and apply theme dynamically
   useEffect(() => {
-    localStorage.setItem("appSettings", JSON.stringify(settings));
-    document.body.className = settings.theme === "light" ? "light-theme" : "dark-theme";
-  }, [settings]);
+    localStorage.setItem(`settings_${username}`, JSON.stringify(settings));
+    document.body.className =
+      settings.theme === "light" ? "light-theme" : "dark-theme";
+  }, [settings, username]);
+
+  // 🔁 Reload settings when user changes (e.g., login/logout)
+  useEffect(() => {
+    const newSettings = getInitialSettings();
+    setSettings(newSettings);
+  }, [username]);
 
   return (
     <SettingsContext.Provider value={{ settings, setSettings }}>

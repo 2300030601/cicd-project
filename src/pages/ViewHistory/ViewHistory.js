@@ -1,5 +1,3 @@
-// Developed by Teammate 2 - UI & Navigation
-
 import React, { useEffect, useState, useContext } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./ViewHistory.css";
@@ -11,20 +9,17 @@ const ViewHistory = () => {
   const [filterType, setFilterType] = useState("all");
   const [sortOption, setSortOption] = useState("newest");
 
-  // ✅ Load transactions for the logged-in user
   const loadTransactions = () => {
-    const username = currentUser?.name || localStorage.getItem("loggedUser");
-    if (!username) return;
+    if (!currentUser || !currentUser.name) return;
 
-    const stored =
-      JSON.parse(localStorage.getItem(`transactions_${username}`)) || [];
+    const key = `transactions_${currentUser.name}`;
+    const stored = JSON.parse(localStorage.getItem(key)) || [];
     setTransactions(stored);
   };
 
   useEffect(() => {
     loadTransactions();
 
-    // ✅ Auto-refresh when transactions are updated anywhere
     const handleUpdate = () => loadTransactions();
     window.addEventListener("transactionsUpdated", handleUpdate);
     window.addEventListener("dashboardUpdated", handleUpdate);
@@ -35,16 +30,14 @@ const ViewHistory = () => {
     };
   }, [currentUser]);
 
-  // ✅ Clear all user-specific history + refresh dashboard
   const clearHistory = () => {
-    const username = currentUser?.name || localStorage.getItem("loggedUser");
-    if (!username) return;
+    if (!currentUser || !currentUser.name) return;
 
+    const key = `transactions_${currentUser.name}`;
     if (window.confirm("Are you sure you want to clear all transactions?")) {
-      localStorage.removeItem(`transactions_${username}`);
+      localStorage.removeItem(key);
       setTransactions([]);
 
-      // ✅ Notify dashboard & other pages to refresh
       window.dispatchEvent(new Event("transactionsUpdated"));
       window.dispatchEvent(new Event("dashboardUpdated"));
 
@@ -52,7 +45,6 @@ const ViewHistory = () => {
     }
   };
 
-  // ✅ Filter and sort logic
   const filteredTransactions = transactions.filter((txn) => {
     if (filterType === "all") return true;
     return txn.type === filterType;
@@ -75,7 +67,6 @@ const ViewHistory = () => {
           Review, filter, and sort your income and expense records.
         </p>
 
-        {/* --- Filter & Sort Controls --- */}
         <div className="filter-sort-bar">
           <div>
             <label>Filter by Type:</label>
@@ -103,7 +94,6 @@ const ViewHistory = () => {
           </div>
         </div>
 
-        {/* --- Transaction Table --- */}
         {sortedTransactions.length === 0 ? (
           <p className="no-transactions">No transactions found.</p>
         ) : (

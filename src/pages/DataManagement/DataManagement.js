@@ -1,4 +1,4 @@
-// Developed by Teammate 1 - Dashboard and Finance Modules
+// ✅ Developed by Teammate 1 - Dashboard and Finance Modules (User-Specific Version)
 
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -8,13 +8,20 @@ const DataManagement = () => {
   const [transactions, setTransactions] = useState([]);
   const [budget, setBudget] = useState({ income: 0, expense: 0 });
 
-  // 🔄 Load all data from localStorage
+  // ✅ Load current logged-in user from localStorage
+  const [currentUser] = useState(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    return storedUser || { name: "Guest", id: "guest" };
+  });
+
+  const username = currentUser.name || "Guest";
+
+  // 🔄 Load user-specific transactions
   const loadData = () => {
     const storedTransactions =
-      JSON.parse(localStorage.getItem("transactions")) || [];
+      JSON.parse(localStorage.getItem(`transactions_${username}`)) || [];
     setTransactions(storedTransactions);
 
-    // ✅ Dynamically calculate income/expense from transactions
     const totalIncome = storedTransactions
       .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -25,13 +32,13 @@ const DataManagement = () => {
     setBudget({ income: totalIncome, expense: totalExpense });
   };
 
-  // ✅ Load once + listen for changes (from AddTransaction or any tab)
+  // ✅ Load initially and auto-refresh on updates
   useEffect(() => {
     loadData();
 
     const handleUpdate = (event) => {
       if (
-        event.key === "transactions" ||
+        event.key === `transactions_${username}` ||
         event.type === "transactionsUpdated"
       ) {
         loadData();
@@ -45,38 +52,41 @@ const DataManagement = () => {
       window.removeEventListener("storage", handleUpdate);
       window.removeEventListener("transactionsUpdated", handleUpdate);
     };
-  }, []);
+  }, [username]);
 
-  // 🧹 Clear data handlers
+  // 🧹 Clear user-specific transactions
   const handleClearTransactions = () => {
-    localStorage.removeItem("transactions");
+    localStorage.removeItem(`transactions_${username}`);
     setTransactions([]);
     setBudget({ income: 0, expense: 0 });
     window.dispatchEvent(new Event("transactionsUpdated"));
-    alert("🧹 All transactions cleared!");
+    alert(`🧹 All transactions cleared for ${username}!`);
   };
 
+  // 🧹 Clear all user-specific data (budget + transactions)
   const handleClearAll = () => {
-    localStorage.removeItem("transactions");
+    localStorage.removeItem(`transactions_${username}`);
+    localStorage.removeItem(`budget_${username}`);
+    localStorage.removeItem(`categoryBudgets_${username}`);
     setTransactions([]);
     setBudget({ income: 0, expense: 0 });
     window.dispatchEvent(new Event("transactionsUpdated"));
-    alert("🗑️ All data cleared!");
+    alert(`🗑️ All data cleared for ${username}!`);
   };
 
-  // 💾 Download as JSON
+  // 💾 Download user data as JSON
   const handleDownloadData = () => {
-    const allData = { transactions, budget };
+    const allData = { username, transactions, budget };
     const blob = new Blob([JSON.stringify(allData, null, 2)], {
       type: "application/json",
     });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "budget_data_backup.json";
+    link.download = `${username}_budget_data_backup.json`;
     link.click();
   };
 
-  // 💰 Totals
+  // 💰 Budget totals
   const income = Number(budget.income ?? 0);
   const expense = Number(budget.expense ?? 0);
   const totalRemaining = income - expense;
@@ -90,25 +100,26 @@ const DataManagement = () => {
         <p className="data-subtitle">
           View, export, or clear your saved transactions.
         </p>
+        <p className="user-label">👤 User: {username}</p>
 
         {/* Budget Summary */}
         <div className="budget-summary">
           <div className="summary-card income">
             <h3>Income</h3>
-            <p>₹{income.toFixed(2)}</p>
+            <p>₹{income.toLocaleString()}</p>
           </div>
           <div className="summary-card expense">
             <h3>Expense</h3>
-            <p>₹{expense.toFixed(2)}</p>
+            <p>₹{expense.toLocaleString()}</p>
           </div>
           <div className="summary-card remaining">
             <h3>Remaining</h3>
-            <p>₹{totalRemaining.toFixed(2)}</p>
+            <p>₹{totalRemaining.toLocaleString()}</p>
           </div>
         </div>
 
         {/* Transactions Table */}
-        <h2 className="table-title">All Transactions</h2>
+        <h2 className="table-title">Your Transactions</h2>
         {transactions.length > 0 ? (
           <table className="transactions-table">
             <thead>
@@ -135,7 +146,7 @@ const DataManagement = () => {
             </tbody>
           </table>
         ) : (
-          <p className="no-data">No transactions available.</p>
+          <p className="no-data">No transactions found for {username}.</p>
         )}
 
         {/* Action Buttons */}

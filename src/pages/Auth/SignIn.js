@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./Auth.css";
 import { useNavigate } from "react-router-dom";
-import { setLoggedInUser } from "../../UserDataManager";
+
 const SignIn = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -10,23 +10,23 @@ const SignIn = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // ✅ Simulate a successful login
-    alert("Login successful! (demo)");
+    // ✅ Fetch all registered users
+    const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    // 🧠 Save user info in localStorage (so all pages can access it)
-    const userData = {
-      id: Date.now(), // unique fake ID (for demo purpose)
-      name: email.split("@")[0], // username part
-      email: email,
-      joined: "March 2024",
-      plan: "Premium",
-      balance: 10000, // optional: demo balance
-      transactions: [], // demo array for future use
-    };
+    // 🔍 Find user with matching credentials
+    const user = users.find(
+      (u) => u.email === email && u.password === password
+    );
 
-    localStorage.setItem("user", JSON.stringify(userData));
+    if (!user) {
+      alert("Invalid email or password!");
+      return;
+    }
 
-    // Redirect to dashboard
+    // 🧠 Save logged-in user globally
+    localStorage.setItem("user", JSON.stringify(user));
+
+    alert(`Welcome back, ${user.name}!`);
     navigate("/dashboard");
   };
 

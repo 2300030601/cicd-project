@@ -8,29 +8,37 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    const userData = { name, email, password };
+    // ✅ Fetch existing users from localStorage or create empty array
+    const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    try {
-      const response = await fetch("http://localhost:8085/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-
-      if (response.ok) {
-        const result = await response.text();
-        alert(result);
-        navigate("/signin");
-      } else {
-        alert("Signup failed! Please try again.");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong!");
+    // ❌ Check if user already exists
+    const existingUser = users.find((u) => u.email === email);
+    if (existingUser) {
+      alert("An account with this email already exists!");
+      return;
     }
+
+    // ✅ Create new user object
+    const newUser = {
+      id: Date.now(),
+      name,
+      email,
+      password, // NOTE: Plain text for demo only
+      joined: new Date().toLocaleDateString(),
+      plan: "Free",
+      balance: 0,
+      transactions: [],
+    };
+
+    // ✅ Save new user in users array and store back
+    users.push(newUser);
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("Account created successfully! You can now sign in.");
+    navigate("/signin");
   };
 
   return (

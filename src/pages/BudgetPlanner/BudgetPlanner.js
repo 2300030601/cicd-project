@@ -28,8 +28,9 @@ const DEFAULT_CATEGORIES = ["Food", "Travel", "Utilities", "Entertainment"];
 const BudgetPlanner = () => {
   const { theme } = useContext(SettingsContext);
 
-  // ✅ Get current logged-in user (consistent with AddTransaction & ViewHistory)
-  const [username] = useState(() => localStorage.getItem("loggedUser") || "guest");
+  // ✅ Get current logged-in user (same key as AddTransaction & Dashboard)
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const username = storedUser?.name || "guest";
 
   const [budget, setBudget] = useState(0);
   const [spent, setSpent] = useState(0);
@@ -64,21 +65,13 @@ const BudgetPlanner = () => {
 
     loadTransactions();
 
-    // ✅ Auto-refresh when new transactions are added
-    const handleUpdate = (e) => {
-      if (
-        e.key === `transactions_${username}` ||
-        e.type === "transactionsUpdated"
-      ) {
-        loadTransactions();
-      }
-    };
-
-    window.addEventListener("storage", handleUpdate);
+    // ✅ Listen for changes
+    const handleUpdate = () => loadTransactions();
     window.addEventListener("transactionsUpdated", handleUpdate);
+    window.addEventListener("dashboardUpdated", handleUpdate);
     return () => {
-      window.removeEventListener("storage", handleUpdate);
       window.removeEventListener("transactionsUpdated", handleUpdate);
+      window.removeEventListener("dashboardUpdated", handleUpdate);
     };
   }, [username]);
 
@@ -122,9 +115,8 @@ const BudgetPlanner = () => {
     }
   };
 
-  // ✅ Calculate totals
+  // ✅ Calculations
   const remaining = Math.max(budget - spent, 0);
-
   const overallData = [
     { name: "Remaining", value: remaining, color: PIE_COLORS.Remaining },
     { name: "Spent", value: spent, color: PIE_COLORS.Spent },
@@ -143,7 +135,7 @@ const BudgetPlanner = () => {
     }))
     .filter((data) => data.spent > 0 || data.budget > 0);
 
-  // ✅ UI Component for category card
+  // ✅ Category card component
   const CategoryCard = ({ category, budget, spent, remaining }) => {
     const isOver = remaining < 0;
     const percentage = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
@@ -175,7 +167,7 @@ const BudgetPlanner = () => {
     );
   };
 
-  // ✅ Theme styling
+  // ✅ Theme styles
   const themeStyles =
     theme === "light"
       ? { backgroundColor: "#f5f5f5", color: "#111" }
@@ -191,7 +183,7 @@ const BudgetPlanner = () => {
           <p className="user-label">👤 User: {username}</p>
         </div>
 
-        {/* --- Budget Overview --- */}
+        {/* Summary */}
         <div className="budget-summary">
           <div className="budget-card">
             <h3>Total Budget</h3>
@@ -207,7 +199,7 @@ const BudgetPlanner = () => {
           </div>
         </div>
 
-        {/* --- Charts --- */}
+        {/* Charts */}
         <div className="budget-charts-and-categories">
           <div className="budget-chart chart-half-size">
             <h2 className="blue-title">Overall Spending</h2>
@@ -229,7 +221,7 @@ const BudgetPlanner = () => {
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
+                <Tooltip formatter={(v) => `₹${v.toLocaleString()}`} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -256,7 +248,7 @@ const BudgetPlanner = () => {
                       <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
+                  <Tooltip formatter={(v) => `₹${v.toLocaleString()}`} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -264,19 +256,13 @@ const BudgetPlanner = () => {
           )}
         </div>
 
-        {/* --- Category Budgets --- */}
+        {/* Category Budgets */}
         <div className="category-budgets-section">
           <h2 className="blue-title">🎯 Category Budgets</h2>
           <div className="budget-summary category-summary">
             {categoryChartData.length > 0 ? (
               categoryChartData.map((data) => (
-                <CategoryCard
-                  key={data.name}
-                  category={data.name}
-                  budget={data.budget}
-                  spent={data.spent}
-                  remaining={data.remaining}
-                />
+                <CategoryCard key={data.name} {...data} />
               ))
             ) : (
               <p className="no-data-msg">
@@ -286,13 +272,13 @@ const BudgetPlanner = () => {
           </div>
         </div>
 
-        {/* --- Add/Update Budgets --- */}
+        {/* Add / Update Budgets */}
         <div className="add-budget-section">
           <h2 className="blue-title">Set or Update Total Budget</h2>
           <form onSubmit={handleAddBudget} className="budget-form">
             <input
               type="number"
-              placeholder="Enter total budget amount (e.g., 50000)"
+              placeholder="Enter total budget amount"
               value={newBudget}
               onChange={(e) => setNewBudget(e.target.value)}
               required
