@@ -31,7 +31,7 @@ const App = () => {
             {/* 🧾 Protected app pages */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/add-transaction" element={<AddTransaction />} /> // Added transaction page
-            <Route path="/view-history" element={<ViewHistory />} />
+            <Route path="/view-history" element={<ViewHistory />} />       // History
             <Route path="/budget-planner" element={<BudgetPlanner />} />
             <Route path="/data-management" element={<DataManagement />} />
             <Route path="/settings" element={<Settings />} />
