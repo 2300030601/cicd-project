@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Auth.css";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -8,37 +9,30 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Fetch existing users from localStorage or create empty array
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    try {
+      // ✅ Send signup data to backend
+      const response = await axios.post("http://localhost:8080/api/users/register", {
+        name,
+        email,
+        password,
+      });
 
-    // ❌ Check if user already exists
-    const existingUser = users.find((u) => u.email === email);
-    if (existingUser) {
-      alert("An account with this email already exists!");
-      return;
+      console.log("✅ Registered successfully:", response.data);
+
+      // ✅ Also save in localStorage (to keep your app logic working)
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      users.push(response.data);
+      localStorage.setItem("users", JSON.stringify(users));
+
+      alert("Account created successfully! You can now sign in.");
+      navigate("/signin");
+    } catch (error) {
+      console.error("❌ Registration failed:", error);
+      alert("Failed to register user. Check your backend connection.");
     }
-
-    // ✅ Create new user object
-    const newUser = {
-      id: Date.now(),
-      name,
-      email,
-      password, // NOTE: Plain text for demo only
-      joined: new Date().toLocaleDateString(),
-      plan: "Free",
-      balance: 0,
-      transactions: [],
-    };
-
-    // ✅ Save new user in users array and store back
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-
-    alert("Account created successfully! You can now sign in.");
-    navigate("/signin");
   };
 
   return (

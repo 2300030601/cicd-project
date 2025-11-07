@@ -12,10 +12,11 @@ import DataManagement from "./pages/DataManagement/DataManagement";
 import Settings from "./pages/Settings/Settings";
 import Investments from "./pages/Investments/Investments";
 import DebtGoals from "./pages/DebtGoals/DebtGoals";
-
+import ManageCategories from "./pages/ManageCategories/ManageCategories";
 // 🧠 Import global context providers
 import { SettingsProvider } from "./context/SettingsContext";
 import { TransactionProvider } from "./context/TransactionContext";
+
 
 const App = () => {
   return (
@@ -37,6 +38,8 @@ const App = () => {
             <Route path="/settings" element={<Settings />} />
             <Route path="/investments" element={<Investments />} />
             <Route path="/debt-goals" element={<DebtGoals />} />
+            <Route path="/categories" element={<ManageCategories />} />
+   
           </Routes>
         </Router>
       </TransactionProvider>

@@ -18,22 +18,42 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
 
-  // ✅ Load transactions from localStorage for the current user
-  const loadTransactions = () => {
+  // 🟢 Fetch from backend
+  const fetchFromBackend = async (userName) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/transactions/${userName.toLowerCase()}`
+      );
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setTransactions(data);
+        localStorage.setItem(`transactions_${userName}`, JSON.stringify(data));
+      } else {
+        console.warn("⚠️ Unexpected response:", data);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching transactions:", err);
+      // fallback to localStorage if offline
+      const cached = localStorage.getItem(`transactions_${userName}`);
+      if (cached) setTransactions(JSON.parse(cached));
+    }
+  };
+
+  const loadTransactions = async () => {
     const user = currentUser || JSON.parse(localStorage.getItem("user"));
     if (!user || !user.name) {
       navigate("/signin");
       return;
     }
-    const key = `transactions_${user.name}`;
-    const storedTxns = JSON.parse(localStorage.getItem(key)) || [];
-    setTransactions(storedTxns);
+
+    await fetchFromBackend(user.name);
   };
 
   useEffect(() => {
     loadTransactions();
 
-    // Listen for updates from AddTransaction page
+    // ✅ Refresh when transaction is added or dashboardUpdated event fires
     const handleUpdate = () => loadTransactions();
     window.addEventListener("transactionsUpdated", handleUpdate);
     window.addEventListener("dashboardUpdated", handleUpdate);

@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./AddTransaction.css";
 import { TransactionContext } from "../../context/TransactionContext";
+import axios from "axios";
 
 const AddTransaction = () => {
   const { currentUser } = useContext(TransactionContext);
@@ -25,7 +26,7 @@ const AddTransaction = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.amount || !formData.category || !formData.date) {
@@ -33,22 +34,17 @@ const AddTransaction = () => {
       return;
     }
 
-    // ✅ Load current user
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (!storedUser || !storedUser.name) {
+    // ✅ Load current user (either from context or localStorage)
+    const storedUser = currentUser || JSON.parse(localStorage.getItem("user"));
+    if (!storedUser || !storedUser.id) {
       alert("⚠️ Please login first!");
       return;
     }
 
-    // ✅ Create key for this specific user
-    const key = `transactions_${storedUser.name}`;
-
-    // ✅ Load that user's transactions
-    const existingTransactions = JSON.parse(localStorage.getItem(key)) || [];
-
-    // ✅ Create the new transaction
+    // ✅ Create new transaction object
     const newTransaction = {
-      id: Date.now(),
+      userName: storedUser.name,
+      userId: storedUser.id,
       type: formData.type,
       amount: parseFloat(formData.amount),
       category: formData.category,
@@ -56,24 +52,39 @@ const AddTransaction = () => {
       note: formData.note,
     };
 
-    // ✅ Add new one and save
-    const updatedTransactions = [...existingTransactions, newTransaction];
-    localStorage.setItem(key, JSON.stringify(updatedTransactions));
+    try {
+      // ✅ Save to backend (MySQL)
+      const res = await axios.post("http://localhost:8080/api/transactions", {
+  ...newTransaction,
+  userName: storedUser.name, // ✅ Send username to backend
+});
 
-    // ✅ Trigger updates across app
-    window.dispatchEvent(new Event("transactionsUpdated"));
-    window.dispatchEvent(new Event("dashboardUpdated"));
+      console.log("✅ Transaction saved to backend:", res.data);
 
-    alert("✅ Transaction added successfully!");
+      // ✅ Save to localStorage for instant UI update
+      const key = `transactions_${storedUser.name}`;
+      const existingTransactions = JSON.parse(localStorage.getItem(key)) || [];
+      const updatedTransactions = [...existingTransactions, res.data];
+      localStorage.setItem(key, JSON.stringify(updatedTransactions));
 
-    // ✅ Reset form
-    setFormData({
-      type: "expense",
-      amount: "",
-      category: "",
-      date: "",
-      note: "",
-    });
+      // ✅ Trigger updates across the app
+      window.dispatchEvent(new Event("transactionsUpdated"));
+      window.dispatchEvent(new Event("dashboardUpdated"));
+
+      alert("✅ Transaction added successfully!");
+
+      // ✅ Reset form
+      setFormData({
+        type: "expense",
+        amount: "",
+        category: "",
+        date: "",
+        note: "",
+      });
+    } catch (err) {
+      console.error("❌ Error saving transaction:", err);
+      alert("❌ Failed to save transaction to backend!");
+    }
   };
 
   return (

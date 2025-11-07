@@ -4,6 +4,7 @@ import React, { useState, useEffect, useContext } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./BudgetPlanner.css";
 import { SettingsContext } from "../../context/SettingsContext";
+import axios from "axios";
 import {
   PieChart,
   Pie,
@@ -25,12 +26,15 @@ const PIE_COLORS = {
 
 const DEFAULT_CATEGORIES = ["Food", "Travel", "Utilities", "Entertainment"];
 
+const API_BASE = "http://localhost:8080/api"; // ✅ Your backend base URL
+
 const BudgetPlanner = () => {
   const { theme } = useContext(SettingsContext);
 
-  // ✅ Get current logged-in user (same key as AddTransaction & Dashboard)
+  // ✅ Current logged-in user
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const username = storedUser?.name || "guest";
+  const userId = storedUser?.id || 0;
 
   const [budget, setBudget] = useState(0);
   const [spent, setSpent] = useState(0);
@@ -64,8 +68,6 @@ const BudgetPlanner = () => {
     };
 
     loadTransactions();
-
-    // ✅ Listen for changes
     const handleUpdate = () => loadTransactions();
     window.addEventListener("transactionsUpdated", handleUpdate);
     window.addEventListener("dashboardUpdated", handleUpdate);
@@ -75,31 +77,81 @@ const BudgetPlanner = () => {
     };
   }, [username]);
 
-  // ✅ Load user’s saved budgets
+  // ✅ Load budget + category budgets (local + backend)
   useEffect(() => {
-    const savedBudget = localStorage.getItem(`budget_${username}`);
-    if (savedBudget) setBudget(Number(savedBudget));
+    const loadBudgets = async () => {
+      try {
+        // 🟢 Load from backend if available
+        const res = await axios.get(`${API_BASE}/budgets/${username}`);
+        if (res.data && res.data.length > 0) {
+          const backendData = res.data;
+          let total = 0;
+          const catBudgets = {};
 
-    const savedCategoryBudgets = JSON.parse(
-      localStorage.getItem(`categoryBudgets_${username}`)
-    );
-    if (savedCategoryBudgets) setCategoryBudgets(savedCategoryBudgets);
+          backendData.forEach((b) => {
+            if (b.categoryName === null) total = b.totalBudget || 0;
+            else catBudgets[b.categoryName] = b.categoryBudget || 0;
+          });
+
+          setBudget(total);
+          setCategoryBudgets(catBudgets);
+
+          // 🟢 Save to localStorage
+          localStorage.setItem(`budget_${username}`, total);
+          localStorage.setItem(
+            `categoryBudgets_${username}`,
+            JSON.stringify(catBudgets)
+          );
+        } else {
+          // 🟠 Fallback to localStorage if backend empty
+          const savedBudget = localStorage.getItem(`budget_${username}`);
+          if (savedBudget) setBudget(Number(savedBudget));
+
+          const savedCategoryBudgets = JSON.parse(
+            localStorage.getItem(`categoryBudgets_${username}`)
+          );
+          if (savedCategoryBudgets) setCategoryBudgets(savedCategoryBudgets);
+        }
+      } catch (err) {
+        console.error("Error loading backend budgets:", err);
+        // fallback to local
+        const savedBudget = localStorage.getItem(`budget_${username}`);
+        if (savedBudget) setBudget(Number(savedBudget));
+
+        const savedCategoryBudgets = JSON.parse(
+          localStorage.getItem(`categoryBudgets_${username}`)
+        );
+        if (savedCategoryBudgets) setCategoryBudgets(savedCategoryBudgets);
+      }
+    };
+    loadBudgets();
   }, [username]);
 
-  // ✅ Update total budget
-  const handleAddBudget = (e) => {
+  // ✅ Update total budget (local + backend)
+  const handleAddBudget = async (e) => {
     e.preventDefault();
     const value = Number(newBudget);
     if (value > 0) {
       localStorage.setItem(`budget_${username}`, value);
       setBudget(value);
-      alert("✅ Total budget updated!");
+      alert("✅ Total budget updated locally and syncing...");
+
+      try {
+        await axios.post(`${API_BASE}/budgets/total`, {
+          userId,
+          userName: username,
+          totalBudget: value,
+        });
+      } catch (err) {
+        console.error("Failed to sync total budget:", err);
+      }
+
       setNewBudget("");
     }
   };
 
-  // ✅ Update category-specific budget
-  const handleAddCategoryBudget = (e) => {
+  // ✅ Update category-specific budget (local + backend)
+  const handleAddCategoryBudget = async (e) => {
     e.preventDefault();
     const { category, amount } = newCategoryBudget;
     const value = Number(amount);
@@ -110,7 +162,19 @@ const BudgetPlanner = () => {
         JSON.stringify(updatedBudgets)
       );
       setCategoryBudgets(updatedBudgets);
-      alert(`✅ ${category} budget updated!`);
+      alert(`✅ ${category} budget updated locally and syncing...`);
+
+      try {
+        await axios.post(`${API_BASE}/budgets/category`, {
+          userId,
+          userName: username,
+          categoryName: category,
+          categoryBudget: value,
+        });
+      } catch (err) {
+        console.error("Failed to sync category budget:", err);
+      }
+
       setNewCategoryBudget({ ...newCategoryBudget, amount: "" });
     }
   };

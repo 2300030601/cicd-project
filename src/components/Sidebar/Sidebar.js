@@ -75,9 +75,14 @@ const Sidebar = () => {
             <Link to="/debt-goals" className={isActive("/debt-goals")}>
               Debt & Goals
             </Link>
+            <Link to="/categories" className={isActive("/categories")}>
+                Categories
+             </Link>
+
             <Link to="/settings" className={isActive("/settings")}>
               Settings
             </Link>
+
           </div>
         </div>
 

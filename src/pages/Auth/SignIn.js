@@ -1,33 +1,39 @@
 import React, { useState } from "react";
 import "./Auth.css";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Fetch all registered users
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    try {
+      // ✅ Call backend to verify login
+      const response = await axios.post("http://localhost:8080/api/users/login", {
+        email,
+        password,
+      });
 
-    // 🔍 Find user with matching credentials
-    const user = users.find(
-      (u) => u.email === email && u.password === password
-    );
+      // ✅ Backend returns user if login success
+      if (response.data && response.data.id) {
+        console.log("✅ Logged in user:", response.data);
 
-    if (!user) {
-      alert("Invalid email or password!");
-      return;
+        // Save in localStorage so the frontend context works
+        localStorage.setItem("user", JSON.stringify(response.data));
+
+        alert(`Welcome back, ${response.data.name}!`);
+        navigate("/dashboard");
+      } else {
+        alert("Invalid email or password!");
+      }
+    } catch (error) {
+      console.error("❌ Login failed:", error);
+      alert("Login failed. Please check your credentials or server.");
     }
-
-    // 🧠 Save logged-in user globally
-    localStorage.setItem("user", JSON.stringify(user));
-
-    alert(`Welcome back, ${user.name}!`);
-    navigate("/dashboard");
   };
 
   return (
