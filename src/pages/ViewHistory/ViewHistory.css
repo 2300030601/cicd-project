@@ -1,3 +1,4 @@
+/* 🌌 Dark Theme (Default) */
 .view-history-container {
   display: flex;
   min-height: 100vh;
@@ -15,7 +16,7 @@
 .view-history-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #00ffff;
+  color: #00ffff; /* Neon Cyan for dark mode */
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
 
@@ -109,7 +110,67 @@
   background: #e60000;
 }
 
-/* --- Responsive --- */
+/* ☀️ Light Theme */
+.light-theme .view-history-container {
+  background: linear-gradient(to bottom right, #f8fafc, #e8edf3);
+  color: #111;
+}
+
+.light-theme .view-history-title {
+  color: #0077b6; /* Same blue as Dashboard title */
+  text-shadow: none;
+}
+
+.light-theme .view-history-subtitle {
+  color: #5f6c7b;
+}
+
+.light-theme .filter-sort-bar label {
+  color: #0077b6;
+}
+
+.light-theme .filter-sort-bar select {
+  background: #f1f5f9;
+  color: #111;
+  border: 1px solid #d3dce6;
+}
+
+.light-theme .filter-sort-bar select:focus {
+  box-shadow: 0 0 6px rgba(0, 119, 182, 0.4);
+}
+
+.light-theme .history-table {
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e8f0;
+}
+
+.light-theme .history-table th {
+  background: #e9f5ff;
+  color: #0077b6;
+}
+
+.light-theme .history-table td {
+  color: #222;
+}
+
+.light-theme .income-row td {
+  color: #2e8b57;
+}
+
+.light-theme .expense-row td {
+  color: #d62828;
+}
+
+.light-theme .clear-btn {
+  background: #d62828;
+}
+
+.light-theme .clear-btn:hover {
+  background: #b71d1d;
+}
+
+/* 📱 Responsive */
 @media (max-width: 768px) {
   .view-history-content {
     margin-left: 0;

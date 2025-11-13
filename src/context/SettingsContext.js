@@ -3,37 +3,31 @@ import React, { createContext, useState, useEffect } from "react";
 export const SettingsContext = createContext();
 
 export const SettingsProvider = ({ children }) => {
-  // 🧠 Get the current logged-in user
-  const currentUser = JSON.parse(localStorage.getItem("user"));
-  const username = currentUser?.name || "Guest";
-
-  // 🏗 Load user-specific settings
-  const getInitialSettings = () => {
-    const saved = localStorage.getItem(`settings_${username}`);
-    return saved
-      ? JSON.parse(saved)
-      : {
-          username: username,
-          theme: "dark",
-          currency: "₹",
-          notificationEnabled: true,
-        };
+  const defaultSettings = {
+    username: "Guest",
+    theme: "light",
+    currency: "₹",
   };
 
-  const [settings, setSettings] = useState(getInitialSettings());
+  const [settings, setSettings] = useState(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const username = storedUser?.name || "Guest";
+    const savedSettings = JSON.parse(localStorage.getItem(`settings_${username}`));
+    return savedSettings || defaultSettings;
+  });
 
-  // 💾 Save settings and apply theme dynamically
+  // ✅ Automatically save when settings change
   useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const username = storedUser?.name || "Guest";
     localStorage.setItem(`settings_${username}`, JSON.stringify(settings));
+  }, [settings]);
+
+  // ✅ Apply theme globally whenever settings.theme changes
+  useEffect(() => {
     document.body.className =
       settings.theme === "light" ? "light-theme" : "dark-theme";
-  }, [settings, username]);
-
-  // 🔁 Reload settings when user changes (e.g., login/logout)
-  useEffect(() => {
-    const newSettings = getInitialSettings();
-    setSettings(newSettings);
-  }, [username]);
+  }, [settings.theme]);
 
   return (
     <SettingsContext.Provider value={{ settings, setSettings }}>

@@ -16,8 +16,7 @@ import ManageCategories from "./pages/ManageCategories/ManageCategories";
 // 🧠 Import global context providers
 import { SettingsProvider } from "./context/SettingsContext";
 import { TransactionProvider } from "./context/TransactionContext";
-
-
+import AboutPage from "./pages/AboutPage";
 const App = () => {
   return (
     <SettingsProvider>
@@ -39,7 +38,8 @@ const App = () => {
             <Route path="/investments" element={<Investments />} />
             <Route path="/debt-goals" element={<DebtGoals />} />
             <Route path="/categories" element={<ManageCategories />} />
-   
+            <Route path="/About" element={<AboutPage />} />
+            
           </Routes>
         </Router>
       </TransactionProvider>

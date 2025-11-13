@@ -1,3 +1,4 @@
+// src/components/WelcomePage.jsx
 // Developed by Teammate 2 - UI & Navigation
 
 import React from "react";
@@ -18,7 +19,10 @@ const WelcomePage = () => {
           <button className="btn primary" onClick={() => navigate("/SignIn")}>
             Get Started
           </button>
-          <button className="btn secondary">About</button>
+          {/* ✅ Link to About Page */}
+          <button className="btn secondary" onClick={() => navigate("/About")}>
+            About
+          </button>
         </div>
       </div>
       <div className="bg-overlay"></div>

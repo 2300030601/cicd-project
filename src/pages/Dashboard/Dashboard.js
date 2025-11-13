@@ -11,10 +11,12 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { TransactionContext } from "../../context/TransactionContext";
+import { SettingsContext } from "../../context/SettingsContext"; // ✅ Import settings context
 import "./Dashboard.css";
 
 const Dashboard = () => {
   const { currentUser } = useContext(TransactionContext);
+  const { settings } = useContext(SettingsContext); // ✅ Access global settings
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
 
@@ -67,7 +69,8 @@ const Dashboard = () => {
   const user = currentUser || JSON.parse(localStorage.getItem("user"));
   if (!user) return null;
 
-  const username = user.name;
+  const username = settings.username || user.name; // ✅ Username from settings
+  const currency = settings.currency || "₹"; // ✅ Currency from settings
 
   // ✅ Financial Calculations
   const totalIncome = transactions
@@ -100,8 +103,11 @@ const Dashboard = () => {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
 
+  // ✅ Apply global theme
+  const themeClass = settings.theme === "dark" ? "dark-theme" : "light-theme";
+
   return (
-    <div className="dashboard-container">
+    <div className={`dashboard-container ${themeClass}`}>
       <Sidebar />
       <div className="dashboard-content">
         <h1 className="dashboard-title">Welcome, {username} 👋</h1>
@@ -113,7 +119,10 @@ const Dashboard = () => {
         <div className="cards-container">
           <div className="card card1">
             <h3>💰 Current Balance</h3>
-            <h2>₹{balance.toLocaleString()}</h2>
+            <h2>
+              {currency}
+              {balance.toLocaleString()}
+            </h2>
             <p className={balance >= 0 ? "positive" : "negative"}>
               {balance >= 0 ? "In Profit" : "In Debt"}
             </p>
@@ -121,13 +130,19 @@ const Dashboard = () => {
 
           <div className="card card2">
             <h3>📈 Total Income</h3>
-            <h2>₹{totalIncome.toLocaleString()}</h2>
+            <h2>
+              {currency}
+              {totalIncome.toLocaleString()}
+            </h2>
             <p className="neutral">This Month</p>
           </div>
 
           <div className="card card3">
             <h3>🔥 Total Expenses</h3>
-            <h2>₹{totalExpenses.toLocaleString()}</h2>
+            <h2>
+              {currency}
+              {totalExpenses.toLocaleString()}
+            </h2>
             <p className="neutral">This Month</p>
           </div>
 
@@ -156,6 +171,7 @@ const Dashboard = () => {
                       border: "1px solid #00ffff",
                       color: "#fff",
                     }}
+                    formatter={(value) => `${currency}${value.toLocaleString()}`} // ✅ Show correct currency in tooltip
                   />
                   <Line
                     type="monotone"
@@ -187,7 +203,8 @@ const Dashboard = () => {
                     <span
                       className={txn.type === "income" ? "positive" : "negative"}
                     >
-                      {txn.type === "income" ? "+" : "-"}₹
+                      {txn.type === "income" ? "+" : "-"}
+                      {currency}
                       {Number(txn.amount).toLocaleString()}
                     </span>
                   </li>

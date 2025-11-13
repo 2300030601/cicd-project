@@ -1,12 +1,17 @@
-// Developed by Teammate 2 - UI & Navigation
-
-import React, { useState, useEffect } from "react";
+// ✅ Developed by Teammate 2 - UI & Navigation (Theme-Responsive Sidebar)
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // ✅ Theme-aware
+  const { settings } = useContext(SettingsContext);
+  const theme = settings.theme || "dark";
+
   const [showDetails, setShowDetails] = useState(false);
   const [user, setUser] = useState({
     name: "",
@@ -18,7 +23,7 @@ const Sidebar = () => {
   const isActive = (path) =>
     location.pathname === path ? "menu-item active" : "menu-item";
 
-  // 🧠 Load user info from localStorage
+  // ✅ Load user info
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
 
@@ -32,10 +37,15 @@ const Sidebar = () => {
         plan: storedUser.plan || "Free",
       });
     } else {
-      // Redirect if no logged-in user
       navigate("/signin");
     }
   }, [navigate]);
+
+  // ✅ Update sidebar theme dynamically (no refresh needed)
+  useEffect(() => {
+    document.querySelector(".sidebar")?.classList.remove("light", "dark");
+    document.querySelector(".sidebar")?.classList.add(theme);
+  }, [theme]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -45,7 +55,7 @@ const Sidebar = () => {
   return (
     <div className="app-container">
       {/* Sidebar */}
-      <div className="sidebar">
+      <div className={`sidebar ${theme}`}>
         <div className="sidebar-top">
           <h2 className="sidebar-logo">Expense Tracker</h2>
 
@@ -76,13 +86,11 @@ const Sidebar = () => {
               Debt & Goals
             </Link>
             <Link to="/categories" className={isActive("/categories")}>
-                Categories
-             </Link>
-
+              Categories
+            </Link>
             <Link to="/settings" className={isActive("/settings")}>
               Settings
             </Link>
-
           </div>
         </div>
 
@@ -90,25 +98,18 @@ const Sidebar = () => {
           <p className="user-name clickable" onClick={() => setShowDetails(true)}>
             {user.name || "Guest User"}
           </p>
-
           <button onClick={handleLogout} className="logout-btn">
             Logout
           </button>
         </div>
       </div>
 
-      {/* Main Content Placeholder */}
-      <div className="main-content"></div>
-
-      {/* Background Blur (excluding sidebar) */}
+      {/* Overlay */}
       {showDetails && (
-        <div
-          className="blur-overlay"
-          onClick={() => setShowDetails(false)}
-        />
+        <div className="blur-overlay" onClick={() => setShowDetails(false)} />
       )}
 
-      {/* User Popup */}
+      {/* User Details Popup */}
       {showDetails && (
         <div className="user-details-popup">
           <h3>👤 User Details</h3>

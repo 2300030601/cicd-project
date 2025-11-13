@@ -1,13 +1,14 @@
+/* 🌌 Dashboard Page Styles */
 .dashboard-container {
   display: flex;
   height: 100vh;
-  background: radial-gradient(circle at top left, #050811, #0a0f1f);
-  color: #fff;
+  background: var(--bg-color);
+  color: var(--text-color);
   font-family: "Poppins", sans-serif;
   overflow-y: auto;
 }
 
-/* Sidebar stays fixed */
+/* Sidebar fixed on left */
 .dashboard-content {
   flex: 1;
   padding: 40px;
@@ -15,22 +16,23 @@
   width: calc(100% - 230px);
 }
 
-/* Titles */
+/* 🏷️ Titles */
 .dashboard-title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #00ffff;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+  color: var(--accent-color);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 }
 
 .dashboard-subtitle {
-  color: #a8b2d1;
+  color: var(--text-color);
+  opacity: 0.8;
   margin-top: 8px;
   margin-bottom: 25px;
   font-size: 1.05rem;
 }
 
-/* ---- Cards Section ---- */
+/* 💳 Summary Cards Section */
 .cards-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -38,11 +40,11 @@
 }
 
 .card {
-  background: rgba(16, 24, 43, 0.95);
+  background: var(--card-bg);
   border-radius: 14px;
   padding: 22px;
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
-  border: 1px solid rgba(0, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -53,14 +55,15 @@
 
 .card h3 {
   font-size: 1.05rem;
-  color: #a8b2d1;
+  color: var(--text-color);
+  opacity: 0.85;
   margin-bottom: 10px;
 }
 
 .card h2 {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-color);
 }
 
 .card p {
@@ -69,29 +72,31 @@
 }
 
 .card1 {
-  border-top: 3px solid #00ffff;
+  border-top: 3px solid var(--accent-color);
 }
 .card2 {
-  border-top: 3px solid #00ff99;
+  border-top: 3px solid var(--positive-color);
 }
 .card3 {
-  border-top: 3px solid #ff6f61;
+  border-top: 3px solid var(--negative-color);
 }
 .card4 {
   border-top: 3px solid #7b61ff;
 }
 
+/* Status Colors */
 .positive {
-  color: #00ff99;
+  color: var(--positive-color);
 }
 .negative {
-  color: #ff6f61;
+  color: var(--negative-color);
 }
 .neutral {
-  color: #a8b2d1;
+  color: var(--text-color);
+  opacity: 0.8;
 }
 
-/* ---- Chart + Transactions Section ---- */
+/* 📊 Chart + Transactions Section */
 .chart-section {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -100,11 +105,11 @@
 }
 
 .chart-card {
-  background: rgba(16, 24, 43, 0.95);
+  background: var(--card-bg);
   border-radius: 14px;
   padding: 22px;
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
-  border: 1px solid rgba(0, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   transition: box-shadow 0.3s ease;
 }
 
@@ -114,24 +119,11 @@
 
 .chart-card h3 {
   font-size: 1.2rem;
-  color: #00ffff;
+  color: var(--accent-color);
   margin-bottom: 15px;
 }
 
-/* Chart Image Placeholder */
-.chart-card img {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  opacity: 0.9;
-  transition: opacity 0.3s ease;
-}
-
-.chart-card img:hover {
-  opacity: 1;
-}
-
-/* ---- Transactions ---- */
+/* 💵 Recent Transactions */
 .transaction-list {
   list-style: none;
   padding: 0;
@@ -143,23 +135,24 @@
   justify-content: space-between;
   margin: 8px 0;
   font-size: 0.95rem;
-  color: #d1d5e0;
+  color: var(--text-color);
+  opacity: 0.9;
 }
 
 .transaction-list .positive {
-  color: #00ff99;
+  color: var(--positive-color);
   font-weight: 600;
 }
 
 .transaction-list .negative {
-  color: #ff6f61;
+  color: var(--negative-color);
   font-weight: 600;
 }
 
-/* View button */
+/* 👁️ View Full History Button */
 .view-btn {
-  background: #00ffff;
-  color: #000;
+  background: var(--accent-color);
+  color: white;
   font-weight: 600;
   padding: 10px 16px;
   border: none;
@@ -170,11 +163,25 @@
 }
 
 .view-btn:hover {
-  background: #00b3ff;
-  color: #fff;
+  filter: brightness(0.9);
 }
 
-/* ---- Responsive ---- */
+/* 🌗 Light Theme Overrides (Optional for better visibility) */
+.light-theme .dashboard-title {
+  text-shadow: none;
+}
+
+.light-theme .card,
+.light-theme .chart-card {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .card:hover,
+.light-theme .chart-card:hover {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 📱 Responsive Design */
 @media (max-width: 1024px) {
   .chart-section {
     grid-template-columns: 1fr;
@@ -184,5 +191,15 @@
     margin-left: 0;
     width: 100%;
     padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-title {
+    font-size: 1.6rem;
+  }
+
+  .cards-container {
+    grid-template-columns: 1fr;
   }
 }

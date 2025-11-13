@@ -42,7 +42,7 @@
 }
 
 .form-group label {
-  color: #00ffff;
+  color: #00e5ff;
   margin-bottom: 6px;
   font-weight: 600;
 }
@@ -93,4 +93,54 @@
   .transaction-form {
     width: 100%;
   }
+}
+
+/* 🌙 Dark Theme (Default) */
+.dark-theme .add-transaction-container {
+  background: radial-gradient(circle at top left, #050811, #0a0f1f);
+  color: white;
+}
+
+.dark-theme .transaction-form {
+  background: rgba(16, 24, 43, 0.95);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+/* ☀️ Light Theme */
+.light-theme .add-transaction-container {
+  background: linear-gradient(to bottom right, #f8fafc, #e8edf3);
+  color: #111;
+}
+
+/* 💙 Heading matches Dashboard in Light Theme */
+.light-theme .add-transaction-title {
+  color: #007bff; /* Blue like Dashboard heading */
+  text-shadow: none;
+}
+
+.light-theme .transaction-form {
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dce3eb;
+}
+
+.light-theme .form-group label {
+  color: #0077b6;
+}
+
+.light-theme .form-group input,
+.light-theme .form-group select,
+.light-theme .form-group textarea {
+  background: #f1f5f9;
+  color: #111;
+}
+
+.light-theme .submit-btn {
+  background: #0077b6;
+  color: #fff;
+}
+
+.light-theme .submit-btn:hover {
+  background: #0096c7;
 }

@@ -8,6 +8,7 @@ const ViewHistory = () => {
   const [transactions, setTransactions] = useState([]);
   const [filterType, setFilterType] = useState("all");
   const [sortOption, setSortOption] = useState("newest");
+  const [currency, setCurrency] = useState("₹");
 
   const loadTransactions = () => {
     if (!currentUser || !currentUser.name) return;
@@ -15,18 +16,39 @@ const ViewHistory = () => {
     const key = `transactions_${currentUser.name}`;
     const stored = JSON.parse(localStorage.getItem(key)) || [];
     setTransactions(stored);
+
+    // ✅ Notify BudgetPlanner whenever transactions are updated or loaded
+    window.dispatchEvent(new Event("transactionsUpdated"));
+    window.localStorage.setItem("transactions_sync", Date.now());
+  };
+
+  const loadCurrency = () => {
+    if (!currentUser || !currentUser.name) return;
+
+    const settingsKey = `settings_${currentUser.name}`;
+    const savedSettings = JSON.parse(localStorage.getItem(settingsKey));
+    if (savedSettings && savedSettings.currency) {
+      setCurrency(savedSettings.currency);
+    }
   };
 
   useEffect(() => {
     loadTransactions();
+    loadCurrency();
 
-    const handleUpdate = () => loadTransactions();
+    const handleUpdate = () => {
+      loadTransactions();
+      loadCurrency();
+    };
+
     window.addEventListener("transactionsUpdated", handleUpdate);
     window.addEventListener("dashboardUpdated", handleUpdate);
+    window.addEventListener("settingsUpdated", handleUpdate);
 
     return () => {
       window.removeEventListener("transactionsUpdated", handleUpdate);
       window.removeEventListener("dashboardUpdated", handleUpdate);
+      window.removeEventListener("settingsUpdated", handleUpdate);
     };
   }, [currentUser]);
 
@@ -38,8 +60,10 @@ const ViewHistory = () => {
       localStorage.removeItem(key);
       setTransactions([]);
 
+      // ✅ Trigger all updates and local sync
       window.dispatchEvent(new Event("transactionsUpdated"));
       window.dispatchEvent(new Event("dashboardUpdated"));
+      window.localStorage.setItem("transactions_sync", Date.now());
 
       alert("✅ All transactions cleared successfully!");
     }
@@ -101,7 +125,7 @@ const ViewHistory = () => {
             <thead>
               <tr>
                 <th>Type</th>
-                <th>Amount (₹)</th>
+                <th>Amount ({currency})</th>
                 <th>Category</th>
                 <th>Date</th>
                 <th>Note</th>
@@ -114,21 +138,22 @@ const ViewHistory = () => {
                   className={txn.type === "income" ? "income-row" : "expense-row"}
                 >
                   <td>{txn.type}</td>
-                  <td>{txn.amount}</td>
+                  <td>
+                    {currency}
+                    {txn.amount}
+                  </td>
                   <td>{txn.category}</td>
                   <td>{txn.date}</td>
-                  <td>{txn.note || "-"}</td>
+                  <td>{txn.note}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
 
-        {transactions.length > 0 && (
-          <button className="clear-btn" onClick={clearHistory}>
-            Clear All Transactions
-          </button>
-        )}
+        <button onClick={clearHistory} className="clear-history-btn">
+          Clear All Transactions
+        </button>
       </div>
     </div>
   );

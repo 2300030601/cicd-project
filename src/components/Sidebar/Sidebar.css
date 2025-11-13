@@ -1,25 +1,101 @@
-/* Base layout */
-.app-container {
-  display: flex;
-  position: relative;
-}
+/* ===============================
+   🌗 Sidebar - Theme Adaptive
+   =============================== */
 
+/* Sidebar base layout */
 .sidebar {
   width: 240px;
-  background-color: #0a0f1f;
-  color: white;
+  background-color: var(--sidebar-bg, #0a0f1f);
+  color: var(--sidebar-text, #fff);
   height: 100vh;
   padding: 20px;
-  z-index: 10;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-.main-content {
-  flex: 1;
-  position: relative;
+/* Sidebar Top Section */
+.sidebar-logo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+  margin-bottom: 25px;
 }
 
-/* Blur overlay (not covering sidebar) */
+.menu-title {
+  font-size: 0.8rem;
+  color: var(--sidebar-subtext, #a8b2d1);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Menu Links */
+.menu-item {
+  color: var(--sidebar-text, #e0e0e0);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 10px 15px;
+  border-radius: 8px;
+  transition: 0.3s ease;
+}
+
+.menu-item:hover {
+  background-color: var(--sidebar-hover, rgba(0, 255, 255, 0.1));
+  color: var(--accent-color);
+}
+
+.menu-item.active {
+  background-color: var(--accent-color);
+  color: #000;
+  font-weight: 600;
+}
+
+/* Footer Section */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.user-name {
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--accent-color);
+  transition: 0.3s;
+}
+
+.user-name:hover {
+  text-decoration: underline;
+}
+
+.logout-btn {
+  margin-top: 12px;
+  background: var(--accent-color);
+  color: #000;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: var(--accent-hover, #00bfff);
+  color: #fff;
+}
+
+/* Blur Overlay */
 .blur-overlay {
   position: fixed;
   top: 0;
@@ -32,40 +108,41 @@
   animation: fadeIn 0.3s ease;
 }
 
-/* Popup box styling */
+/* Popup - User Details */
 .user-details-popup {
   position: fixed;
   top: 50%;
   left: calc(240px + 50%);
   transform: translate(-50%, -50%);
-  background: linear-gradient(145deg, #10172b, #1a223a);
-  color: #e0f7fa;
+  background: var(--card-bg);
+  color: var(--text-color);
   padding: 30px;
   border-radius: 15px;
   width: 360px;
   text-align: center;
   box-shadow: 0 0 25px rgba(0, 255, 255, 0.25);
-  border: 1px solid rgba(0, 255, 255, 0.3);
+  border: 1px solid var(--border-color);
   z-index: 100;
   animation: scaleIn 0.3s ease;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .user-details-popup h3 {
-  color: #00ffff;
+  color: var(--accent-color);
   margin-bottom: 15px;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 }
 
 .user-details-popup p {
-  color: #bfefff;
+  color: var(--text-color);
   margin: 8px 0;
   font-size: 0.95rem;
 }
 
-/* Close button */
+/* Close Button */
 .close-btn {
   margin-top: 18px;
-  background: linear-gradient(135deg, #00ffff, #00cc99);
+  background: var(--accent-color);
   border: none;
   color: #000;
   font-weight: 600;
@@ -76,8 +153,8 @@
 }
 
 .close-btn:hover {
-  background: linear-gradient(135deg, #00ccff, #00ffaa);
-  transform: translateY(-2px);
+  background: var(--accent-hover, #00ccff);
+  color: #fff;
 }
 
 /* Animations */
@@ -99,4 +176,23 @@
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+}
+
+/* ===============================
+   💡 Theme Variable Overrides
+   =============================== */
+body.dark-theme {
+  --sidebar-bg: #0a0f1f;
+  --sidebar-text: #f1f1f1;
+  --sidebar-subtext: #a8b2d1;
+  --sidebar-hover: rgba(0, 255, 255, 0.1);
+  --accent-hover: #00bfff;
+}
+
+body.light-theme {
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #1a1a1a;
+  --sidebar-subtext: #6c757d;
+  --sidebar-hover: rgba(0, 123, 255, 0.1);
+  --accent-hover: #007bff;
 }

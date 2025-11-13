@@ -1,9 +1,10 @@
-// ✅ Developed by Teammate 2 - UI & Navigation (User-Specific Version)
+// ✅ Developed by Teammate 2 - UI & Navigation (User-Specific Version, Global Reflection Enabled)
 
 import React, { useContext, useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import "./Settings.css";
 import { SettingsContext } from "../../context/SettingsContext";
+import axios from "axios";
 
 function Settings() {
   const { settings, setSettings } = useContext(SettingsContext);
@@ -12,39 +13,83 @@ function Settings() {
   // ✅ Load current logged-in user from localStorage
   const [currentUser] = useState(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    return storedUser || { name: "Guest", id: "guest" };
+    return storedUser || { name: "Guest", id: 0 };
   });
 
   const username = currentUser.name || "Guest";
+  const userId = currentUser.id || 0;
 
-  // ✅ Load user-specific settings from localStorage
+  // ✅ Backend API base
+  const API_BASE = "http://localhost:8080/api/settings";
+
+  // ✅ Load settings (prefer backend, else localStorage)
   useEffect(() => {
-    const savedUserSettings =
-      JSON.parse(localStorage.getItem(`settings_${username}`)) || settings;
-    setTempSettings(savedUserSettings);
-    setSettings(savedUserSettings);
-  }, [username, setSettings]);
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/${userId}`);
+        if (res.data) {
+          setTempSettings(res.data);
+          setSettings(res.data);
 
-  // ✅ Save user-specific settings
-  const handleSave = () => {
-    setSettings(tempSettings);
-    localStorage.setItem(`settings_${username}`, JSON.stringify(tempSettings));
-    alert(`✅ Settings saved successfully for ${username}!`);
-  };
+          document.body.className =
+            res.data.theme === "light" ? "light-theme" : "dark-theme";
 
-  // ✅ Handle input change
+          localStorage.setItem(
+            `settings_${username}`,
+            JSON.stringify(res.data)
+          );
+          return;
+        }
+      } catch (err) {
+        console.warn("⚠️ No backend settings found, using localStorage data.");
+      }
+
+      // Fallback: localStorage
+      const savedUserSettings =
+        JSON.parse(localStorage.getItem(`settings_${username}`)) || settings;
+      setTempSettings(savedUserSettings);
+      setSettings(savedUserSettings);
+      document.body.className =
+        savedUserSettings.theme === "light" ? "light-theme" : "dark-theme";
+    };
+
+    fetchSettings();
+  }, [username, userId, setSettings]);
+
+  // ✅ Handle input changes
   const handleChange = (key, value) => {
     setTempSettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  // ✅ Apply theme to document body dynamically
-  useEffect(() => {
+  // ✅ Save settings to backend + localStorage
+  const handleSave = async () => {
     document.body.className =
       tempSettings.theme === "light" ? "light-theme" : "dark-theme";
-  }, [tempSettings.theme]);
+
+    // Update global context
+    setSettings(tempSettings);
+
+    // Save locally
+    localStorage.setItem(`settings_${username}`, JSON.stringify(tempSettings));
+
+    // Save to backend
+    try {
+      await axios.post(`${API_BASE}/save`, {
+        userId: userId,
+        username: tempSettings.username || username,
+        theme: tempSettings.theme,
+        currency: tempSettings.currency,
+      });
+
+      alert(`✅ Settings saved successfully for ${username}!`);
+    } catch (error) {
+      console.error("❌ Error saving settings:", error);
+      alert("⚠️ Failed to save settings to server.");
+    }
+  };
 
   return (
-    <div className={`settings-page ${tempSettings.theme}-theme`}>
+    <div className={`settings-page ${settings.theme}-theme`}>
       <Sidebar />
       <div className="settings-content">
         <div className="settings-header">
